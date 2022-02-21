@@ -1,0 +1,259 @@
+---
+title: "Chapter 17"
+author: "Alan T. Arnholt"
+date: 'Last compiled: `r format(Sys.time(), "%B %d, %Y at %X")`'
+output: bookdown::html_document2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA, warning = FALSE, message = FALSE, fig.align = "center")
+library(tidyverse)
+library(janitor)
+```
+
+# Confidence Intervals for Means
+
+**Objectives:**
+
+________________
+
+I.    Discover the sampling distribution of $\bar{x}$
+
+II.   Use the distribution to solve problems
+
+III.  $t$ distribution 
+
+IV.   Examples of CI for $\mu$
+
+V.    Special conditions for $t$
+
+________________
+
+```{r, echo = FALSE}
+opar <- par(no.readonly = TRUE)
+# set.seed(33)
+par(mfrow=c(4, 3))
+par(mar= c(2, 2, 3, 1))
+m <- 100000  # Number of Samples
+EX <- 1.1   # Character expansion
+COLOR = "lightblue"
+# X~N(5,5)
+x <- seq(-12, 22,.01)
+y <- dnorm(x,5,5)
+plot(x, y, type = "l",col = "black", lwd = 2, main = "X ~ N(5, 5)",xlab="", ylab = "")
+# X~U((10 - sqrt(300))/2, (10 + sqrt(300))/2))
+x <- seq(-12, 22,.01)
+y <- dunif(x,(10 - sqrt(300))/2, (10 + sqrt(300))/2)
+plot(x, y, type = "l", col = "black", lwd = 2, main = "X ~ U(10 - 8.66, 10 + 8.66)", xlab = "", ylab = "")
+# X~Exp(1/5)
+x <- seq(-12, 22,.01)
+y <- dexp(x, 1/5)
+plot(x, y, type = "l", col = "black", lwd = 2, main = "X ~ Exp(1/5)", xlab = "", ylab = "")
+xbar.2 <- apply(matrix(rnorm(m*2,5,5),nrow=m),1,mean)
+n2<- c(mean(xbar.2), sd(xbar.2))
+hist(xbar.2,breaks=30,col = COLOR, xlim=c(-12, 22),prob=T,xlab="",ylab="",main="")
+mtext(expression(bar(x)[2]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(2)), add = TRUE, n = 300, lwd = 2)
+xbar.2 <- apply(matrix(runif(m*2,(10 - sqrt(300))/2, (10 + sqrt(300))/2), nrow=m),1,mean)
+u2 <- c(mean(xbar.2), sd(xbar.2))
+hist(xbar.2,breaks=50,col = COLOR,xlim=c(-12, 22),prob=T,xlab="",ylab="",main= "")
+mtext(expression(bar(x)[2]), side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(2)), add = TRUE, n = 300, lwd = 2)
+xbar.2 <- apply(matrix(rexp(m*2,1/5),nrow=m),1,mean)
+e2 <- c(mean(xbar.2), sd(xbar.2))
+hist(xbar.2,breaks=50,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[2]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(2)), add = TRUE, n = 300, lwd = 2)
+xbar.12 <- apply(matrix(rnorm(m*12,5,5),nrow=m),1,mean)
+n12 <- c(mean(xbar.12), sd(xbar.12))
+hist(xbar.12,breaks=30,col = COLOR,xlim=c(-12, 22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[12]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(12)), add = TRUE, n = 300, lwd = 2)
+xbar.12 <- apply(matrix(runif(m*12,(10 - sqrt(300))/2, (10 + sqrt(300))/2), nrow=m),1,mean)
+u12 <- c(mean(xbar.12), sd(xbar.12))
+hist(xbar.12,breaks=30,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[12]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(12)), add = TRUE, n = 300, lwd = 2)
+xbar.12 <- apply(matrix(rexp(m*12,1/5),nrow=m),1,mean)
+e12 <- c(mean(xbar.12), sd(xbar.12))
+hist(xbar.12,breaks=30,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[12]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(12)), add = TRUE, n = 300, lwd = 2)
+xbar.30 <- apply(matrix(rnorm(m*30,5,5),nrow=m),1,mean)
+n30 <- c(mean(xbar.30), sd(xbar.30))
+hist(xbar.30,breaks=20,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[30]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(30)), add = TRUE, n = 300, lwd = 2)
+xbar.30 <- apply(matrix(runif(m*30,(10 - sqrt(300))/2, (10 + sqrt(300))/2), nrow=m),1,mean)
+u30 <- c(mean(xbar.30), sd(xbar.30))
+hist(xbar.30,breaks=20,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[30]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(30)), add = TRUE, n = 300, lwd = 2)
+xbar.30 <- apply(matrix(rexp(m*30,1/5),nrow=m),1,mean)
+e30 <- c(mean(xbar.30), sd(xbar.30))
+hist(xbar.30,breaks=20,col = COLOR,xlim=c(-12,22),prob=T,xlab="",ylab="",main="")
+mtext(  expression(bar(x)[30]),side=3,line=1,cex=EX)
+curve(dnorm(x, 5, 5/sqrt(30)), add = TRUE, n = 300, lwd = 2)
+par(opar)
+matrix(c(n2, u2, e2, n12, u12, e12, n30, u30, e30), byrow = TRUE, nrow = 3)
+```
+
+```{r}
+m <- 100000  # Number of Samples
+EX <- 1.1   # Character expansion
+COLOR = "lightblue"
+xbar.30 <- apply(matrix(rexp(m*30,1/5),nrow=m),1,mean)
+e30 <- c(mean(xbar.30), sd(xbar.30))
+hist(xbar.30, breaks = 70, col = COLOR, xlim=c(1, 9), prob=TRUE, xlab="", ylab="", main="")
+mtext(expression(bar(x)[30]), side = 3, line = 1,cex = EX)
+curve(dnorm(x, 5, 5/sqrt(30)), add = TRUE, n = 300, lwd = 2)
+```
+If $n$ is "large enough" and sampled values are independent, $\bar{x} \dot\sim \mathcal{N}\left(\mu_{\bar{x}} = \mu, \sigma_{\bar{x}} = \frac{\sigma}{\sqrt{n}} \right)$
+
+**Conditions:**
+
+1. **Randomization**---data values are sampled randomly OR sample is representative
+2. **10%**---Less than 10% of the population is sampled.
+3. **Large enough sample**---hsape of the distribution looks normal.  Sampling from a normal...any size; sampling from a symmetric distribution...12 may be sufficient; sampling from a very skewed population....may need 1500 or more.
+
+> **The Central Limit Theorem** states that as $n$ increases, the sample mean has a more and more normal shaped sampling distribution with the same mean as the population and a standard deviation of $\sigma/\sqrt{n}$.
+
+________
+
+## Example
+
+Wildlife scientists studying a certain species of frogs know that adults should weigh an average of 118 grams with a standard deviation of 14 grams.
+
+1. What is the distribution of $\bar{x}$?  
+
+**ANSWER:** $\bar{x} \sim \mathcal{N}(118, 14/\sqrt{50} = `r 14/sqrt(50)`)$
+
+2. A random sample of 50 adult frogs gives a mean weight of only 110 grams,  Is this unusually low?  
+
+**ANSWER:** 
+
+3.  What percent of similar samples would have average weights less than 112 grams?
+
+$P(\bar{x}\leq 112)=$?
+
+```{r}
+# Your code here
+```
+
+4. Between 115 and 120 grams?
+
+$P(115 \leq \bar{x} \leq 120)=$?
+
+```{r}
+# Your code here
+```
+
+5.  More than 125 grams?
+
+$P(\bar{x} \geq 125)=$?
+
+```{r}
+# Your code here
+```
+
+6. What is the 5$^{\text{th}}$ percentile of average from weight when $n = 50$?
+
+$P(\bar{x} \leq q) = 0.05\rightarrow q = `r qnorm(0.05, 118, 14/sqrt(50))`$?
+
+```{r}
+# Your code here
+```
+________________
+
+Problem with the normal distribution is that we seldom know the value of $\sigma$!  
+
+What happens when $\sigma$ is replaced with $s$ in $\frac{(\bar{X} - \mu)}{\sigma/\sqrt{n}}$?
+
+$$\frac{(\bar{X} - \mu)}{s/\sqrt{n}} \sim t_{n-1}$$
+
+$$f(t) = \frac{\Gamma(\frac{\nu + 1}{2})}{\sqrt{\nu\pi}\cdot\Gamma(\frac{\nu}{2})}\left(1 + \frac{t^2}{\nu} \right)^{-\tfrac{\nu+1}{2}}$$
+where $\nu =$ df, $\Gamma(n) = (n - 1)!$, $\Gamma(\frac{1}{2}) = \sqrt{\pi}$, and $\Gamma(x)=\int_{0}^{\infty}t^{x -1}e^{-t}dt$
+
+__________
+
+**To use a $t-$distribution, sample size determines what to check**
+
+$n < 20$ check that sample is enarly normal; $20 \leq n < 30$ sample should have no outliers, some skewness OK; $n \geq 30$ sample should not have strong skewnss or far outliers.
+
+____________
+
+## Example
+
+A coffee machine dispenses coffee into paper cups.  The machine says it dispenses 10 oz, but the actual amount varies from cup to cup.  Actual amount for the 20 cups are: 9.9, 10.0, 9.9, 10.0, 9.7, 9.6, 9.5, 9.6, 9.9, 10.0, 9.8, 9.7, 10.2, 9.5, 10.1, 9.8, 10.1, 9.8, and 9.9.
+
+Is there evidence the machine is shortchanging customers per a confidence interval?  If so, by how much?
+
+```{r}
+# read in data
+coffee <- c(9.9, 10.0, 9.9, 10.0, 9.7, 9.6, 
+            9.5, 9.6, 9.9, 10.0, 9.8, 9.7, 
+            10.2, 9.5, 10.1, 9.8, 10.1, 9.8, 9.9)
+DF <- data.frame(coffee = coffee)
+# assess data
+# using just a vector
+qqnorm(coffee)
+qqline(coffee)
+# note: argument is not x but sample here
+ggplot(data = DF, aes(sample = coffee)) +
+  stat_qq() + 
+  stat_qq_line() + 
+  theme_bw()
+# construct CI
+t.test(x = coffee, conf.level = 0.95)
+# Or
+t.test(x = coffee, conf.level = 0.95)$conf
+# Or using formula
+n <- sum(!is.na(coffee))
+xbar <- mean(coffee)
+S <- sd(coffee)
+CT <- qt(0.975, n-1)
+ME <- CT*S/sqrt(n)
+LL <- xbar - ME
+UL <- xbar + ME
+c(xbar, S, CT, ME, LL, UL)
+```
+
+__________
+
+## Example
+
+A company has set a goal of developing a battery that lasts over 5 hours (300 minutes) of continuous use.  The first 12 batteries lasted: 321, 295, 332, 351, 281, 336, 311, 253, 270, 326, 311, and 288 minutes. Is there evidence the company has met its goal per a confidence interval?
+
+```{r}
+battery <- c(321, 295, 332, 351, 281, 336, 
+             311, 253, 270, 326, 311, 288)
+DF2 <- data.frame(battery = battery)
+# Your finish the code
+
+```
+_________
+
+## Bootstrap percentile CI
+
+* Take $B$ samples of the same size ($n$) as the original sample with replacement from the original sample.  These $B$ samples are called bootstrap samples.
+* Compute a statistic of interest (sample mean for the two previous examples) for each bootstrap sample.
+* Find the quantiles (say 0.05 and 0.95 for a 90% CI) of the bootstrap distribution.  
+
+```{r}
+B <- 10000
+xbar <- numeric(B)
+for(i in 1:B){
+  bss <- sample(coffee, size = 20, replace = TRUE)
+  xbar[i] <- mean(bss)
+}
+BPCI <- quantile(xbar, probs = c(0.025, 0.975))
+BPCI
+#
+xbar <- numeric(B)
+for(i in 1:B){
+  bss <- sample(battery, size = 12, replace = TRUE)
+  xbar[i] <- mean(bss)
+}
+BPCI <- quantile(xbar, probs = c(0.025, 0.975))
+BPCI
+```
